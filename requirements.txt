@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+llama-index
+llama-index-llms-openai
+llama-index-embeddings-openai
+python-dotenv
+chromadb
+llama-index-vector-stores-chroma
+llama-index-embeddings-huggingface
+# Add other dependencies as needed
