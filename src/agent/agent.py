@@ -24,7 +24,7 @@ if "OPENAI_API_KEY" in os.environ:
 else:
     print("❌ OPENAI_API_KEY environment variable is NOT set. Please check your .env file.")
 
-Settings.llm = OpenAI(model="gpt-4o-mini")
+Settings.llm = OpenAI(model="o4-mini")
 Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
 
 # --- Index Loading ---
@@ -54,6 +54,7 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
                 "The PR data contains JSON objects with fields like 'files', 'diffs', 'changes', 'added', 'removed', 'author', 'title', etc. "
                 "When using this tool for diffs, try queries like 'Show changes to file X' or 'Find diffs in the security module'. "
                 "This is the FIRST tool to use for ANY query about what files were changed or how they were modified."
+                "This is also the first tool to use when generating an initial code review. "
             ),
         },
         {
@@ -61,9 +62,10 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
             "name": "search_code",
             "collection_name": f"{pr_id}_source_code",
             "description": (
-                "FINAL CODE STATE ONLY: This tool searches the current/final state of the code after all changes. "
+                "INITIAL CODE STATE ONLY: This tool searches the initial state of the code before all changes. "
                 "DO NOT use this tool for questions about changes, diffs, or what was modified - it cannot answer these. "
                 "Use only for questions about implementation details, code structure, or how specific functionality works "
+                "Use this tool to gain more context about the code and the specific changes by looking upp the complete codefiles, but be aware that it does not reflect any changes made in the PR."
                 "in the CURRENT state of the code."
             ),
         },
@@ -255,6 +257,7 @@ def create_agent(pr_id: str) -> ReActAgent:
         tools=query_engine_tools,
         llm=Settings.llm,
         system_prompt=SYSTEM_PROMPT,
+        max_iterations=10,
         verbose=True # Set to False in production
     )
     return agent
@@ -295,7 +298,7 @@ if __name__ == "__main__":
     # Make sure OPENAI_API_KEY is set
     
     # Test with a specific PR ID that should have indexed data
-    test_pr_id = "project_1"  # Replace with an actual PR ID from your indexed data
+    test_pr_id = "project_2"  # Replace with an actual PR ID from your indexed data
     
     print(f"\n--- Testing Agent with PR ID: {test_pr_id} ---")
     test_agent = get_agent_for_pr(test_pr_id)
