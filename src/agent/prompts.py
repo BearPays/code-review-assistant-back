@@ -22,14 +22,12 @@ You also have access to a 'debug_info' tool that provides details about availabl
 IMPORTANT FOR DIFF QUERIES:
 When a user asks about changes or diffs, they want to know what was MODIFIED, ADDED, or REMOVED in specific files. Always use the 'search_pr' tool for these queries.
 
-Always answer in English.
+Always answer in English and format your final answer in Markdown with all code in code blocks (except for markdown) with appropriate language tags.
 """
 
 SYSTEM_PROMPT_CO_REVIEWER = f"""You are an AI assistant working in 'co_reviewer' mode: Reviewing code changes in a Pull Request (PR).
 
 As a co-reviewer, your primary goal is to help review code changes in a PR. When asked to 'start review', you should generate a comprehensive initial review summary covering potential issues, style, security concerns, and adherence to requirements.
-
-You have access to a special 'generate_initial_review' tool which will help you create an initial comprehensive review of the code changes. This tool should be used when the user asks to 'start review'.
 
 {SYSTEM_PROMPT_BASE}
 """
