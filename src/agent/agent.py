@@ -12,7 +12,7 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.response_synthesizers import get_response_synthesizer
 
-from .prompts import SYSTEM_PROMPT
+from .prompts import SYSTEM_PROMPT_CO_REVIEWER, SYSTEM_PROMPT_INTERACTIVE_ASSISTANT
 
 # --- Settings ---
 # Load environment variables from .env file
@@ -51,7 +51,12 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
             "description": (
                 "PRIMARY TOOL FOR CODE CHANGES: Use this tool for ANY questions about file diffs, changes, or modifications. "
                 "This is THE ONLY tool that can answer questions about what was changed in the PR. "
-                "The PR data contains JSON objects with fields like 'files', 'diffs', 'changes', 'added', 'removed', 'author', 'title', etc. "
+                "The PR data is organized into multiple files: a main PR metadata file and individual files for each changed file in the PR. "
+                "The metadata file contains information like 'pr_number', 'title', 'description', 'author', 'state', etc. "
+                "Each modified file has its own JSON file in the 'modified_files' directory, preserving the original file path structure. "
+                "For example, if a file at 'internal/integration/security_reentrant/oas_schemas_gen.go' was modified, "
+                "its JSON file will be at 'modified_files/internal/integration/security_reentrant/oas_schemas_gen.go.json'. "
+                "Each JSON file contains the 'filename', 'status', 'additions', 'deletions', and 'diff' information. "
                 "When using this tool for diffs, try queries like 'Show changes to file X' or 'Find diffs in the security module'. "
                 "This is the FIRST tool to use for ANY query about what files were changed or how they were modified."
                 "This is also the first tool to use when generating an initial code review. "
@@ -126,7 +131,7 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
                 # Get appropriate parameters based on collection type
                 similarity_top_k = 10  # Retrieve more results for better context
                 
-                # For PR data (JSON), adjust query parameters to better handle structured data
+                # For PR data (JSON), adjust query parameters to better handle structured data, with a filter-capable query engine
                 if "pr_data" in config["collection_name"]:
                     # Create a custom response synthesizer for PR data
                     response_synthesizer = get_response_synthesizer(
@@ -136,8 +141,9 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
                     
                     # Create a query engine with custom parameters for PR data
                     query_engine = index.as_query_engine(
-                        similarity_top_k=similarity_top_k, 
+                        similarity_top_k=similarity_top_k,
                         response_synthesizer=response_synthesizer,
+                        filters=None,  # We'll set this dynamically based on the query
                         verbose=True
                     )
                     print(f"Created PR-data specific query engine for {config['name']}")
@@ -175,10 +181,10 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
 
 # --- Agent Creation ---
 
-def create_agent(pr_id: str) -> ReActAgent:
-    """Creates a ReActAgent for the given PR ID."""
+def create_agent(pr_id: str, mode: str) -> ReActAgent:
+    """Creates a ReActAgent for the given PR ID and interaction mode."""
     query_engine_tools = load_query_engine_tools(pr_id)
-    
+
     # Check if any tools were loaded successfully
     if not query_engine_tools:
          print(f"Failed to create agent for pr_id {pr_id} as no tools were loaded.")
@@ -242,21 +248,30 @@ def create_agent(pr_id: str) -> ReActAgent:
             response += f"\nError accessing collections: {e}"
         
         return response
-    
+
     debug_tool = FunctionTool.from_defaults(
         name="debug_info",
         description="Get debug information about the available tools and their data collections.",
         fn=debug_tools
     )
-    
+
     # Add the debug tool to the list
     query_engine_tools.append(debug_tool)
 
-    print(f"Creating ReActAgent with {len(query_engine_tools)} tools for {pr_id}")
+    # Adjust system prompt based on mode
+    if mode == "co_reviewer":
+        system_prompt = SYSTEM_PROMPT_CO_REVIEWER
+    elif mode == "interactive_assistant":
+        system_prompt = SYSTEM_PROMPT_INTERACTIVE_ASSISTANT
+    else:
+        print(f"Error: Invalid mode {mode}")
+        return None
+
+    print(f"Creating ReActAgent with {len(query_engine_tools)} tools for {pr_id} in mode {mode}")
     agent = ReActAgent.from_tools(
         tools=query_engine_tools,
         llm=Settings.llm,
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=system_prompt,
         max_iterations=10,
         verbose=True # Set to False in production
     )
@@ -268,11 +283,11 @@ def create_agent(pr_id: str) -> ReActAgent:
 agent_sessions: Dict[str, ReActAgent] = {} 
 chat_history: Dict[str, List] = {} # Basic chat history store
 
-def get_agent_for_pr(pr_id: str) -> ReActAgent:
-    """Gets or creates an agent instance for a given PR ID."""
+def get_agent_for_pr(pr_id: str, mode: str) -> ReActAgent:
+    """Gets or creates an agent instance for a given PR ID and mode."""
     if pr_id not in agent_sessions:
-        print(f"Creating new agent for pr_id: {pr_id}")
-        agent_sessions[pr_id] = create_agent(pr_id)
+        print(f"Creating new agent for pr_id: {pr_id} with mode: {mode}")
+        agent_sessions[pr_id] = create_agent(pr_id, mode)
         chat_history[pr_id] = [] # Initialize chat history
     # Ensure agent creation was successful
     if agent_sessions.get(pr_id) is None:
@@ -336,4 +351,4 @@ if __name__ == "__main__":
         print(get_chat_history(test_pr_id))
 
     else:
-        print(f"Could not run test: Agent creation failed for pr_id {test_pr_id}.") 
+        print(f"Could not run test: Agent creation failed for pr_id {test_pr_id}.")

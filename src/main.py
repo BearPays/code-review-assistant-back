@@ -42,7 +42,7 @@ async def chat_endpoint(request: ChatRequest):
     
     print(f"Received request: {request.dict()}")
     
-    agent = get_agent_for_pr(request.pr_id)
+    agent = get_agent_for_pr(request.pr_id, request.mode)
     
     if agent is None:
         print(f"Error: Failed to get or create agent for pr_id {request.pr_id}")
