@@ -13,6 +13,7 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.response_synthesizers import get_response_synthesizer
 
 from .prompts import SYSTEM_PROMPT_CO_REVIEWER, SYSTEM_PROMPT_INTERACTIVE_ASSISTANT
+from .review_tool import create_review_tool
 
 # --- Settings ---
 # Load environment variables from .env file
@@ -257,6 +258,12 @@ def create_agent(pr_id: str, mode: str) -> ReActAgent:
 
     # Add the debug tool to the list
     query_engine_tools.append(debug_tool)
+    
+    # Add the review tool, but only in co_reviewer mode
+    if mode == "co_reviewer":
+        print(f"Adding review tool for co_reviewer mode")
+        review_tool = create_review_tool(query_engine_tools, pr_id)
+        query_engine_tools.append(review_tool)
 
     # Adjust system prompt based on mode
     if mode == "co_reviewer":
@@ -316,14 +323,15 @@ if __name__ == "__main__":
     test_pr_id = "project_2"  # Replace with an actual PR ID from your indexed data
     
     print(f"\n--- Testing Agent with PR ID: {test_pr_id} ---")
-    test_agent = get_agent_for_pr(test_pr_id)
+    # Specify co_reviewer mode to test the review functionality
+    test_agent = get_agent_for_pr(test_pr_id, "co_reviewer")
 
     if test_agent:
         print("\n--- Testing Agent ---")
         
         # Test initial review for co-reviewer mode
         print("\n--- Testing Co-Reviewer Initial Summary ---")
-        initial_review_query = "Generate an initial review summary." 
+        initial_review_query = "start review" 
         # In the real app, this is triggered internally, not by user query text
         response = test_agent.chat(initial_review_query) 
         print(f"Initial Review Response: {response}")

@@ -27,7 +27,19 @@ Always answer in English and format your final answer in Markdown with all code 
 
 SYSTEM_PROMPT_CO_REVIEWER = f"""You are an AI assistant working in 'co_reviewer' mode: Reviewing code changes in a Pull Request (PR).
 
-As a co-reviewer, your primary goal is to help review code changes in a PR. When asked to 'start review', you should generate a comprehensive initial review summary covering potential issues, style, security concerns, and adherence to requirements.
+As a co-reviewer, your primary goal is to help review code changes in a PR. When the user types 'start review', you should use the 'start_review' tool to generate a comprehensive analysis. 
+
+IMPORTANT: When the 'start_review' tool is used, it will handle the entire review process by:
+1. Examining the full PR data
+2. Using other tools to gain context about the code and requirements
+3. Generating a detailed, section-by-section analysis with specific feedback
+4. Following a structured format covering code correctness, architecture, security, and more
+
+When presenting the review from the tool, do not modify or summarize its content - deliver the complete review exactly as returned by the tool.
+
+CRITICAL: ALWAYS communicate in English only. Never translate content to other languages.
+
+When asked followup questions after the initial review, you should use the other tools to answer the question.
 
 {SYSTEM_PROMPT_BASE}
 """
@@ -35,6 +47,8 @@ As a co-reviewer, your primary goal is to help review code changes in a PR. When
 SYSTEM_PROMPT_INTERACTIVE_ASSISTANT = f"""You are an AI assistant working in 'interactive_assistant' mode: Helping users understand code and PR changes.
 
 As an interactive assistant, your goal is to help users understand code and PR changes by answering their questions clearly and providing context when needed.
+
+CRITICAL: ALWAYS communicate in English only. Never translate content to other languages.
 
 {SYSTEM_PROMPT_BASE}
 """

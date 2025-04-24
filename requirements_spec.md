@@ -17,7 +17,7 @@ The backend is responsible for managing session state, mode handling, RAG indexi
 
 ### FR2: LLM Integration
 
-- Uses ReAct Agent with gpt-04-mini. and Llama index
+- Uses ReAct Agent with gpt-o4-mini(a new model). and Llama index
 - Has tools such as different rag capabilities to search external data collections 
 
 ### FR3: RAG Infrastructure Integration
@@ -98,3 +98,5 @@ E.g. query = "What are the main security changes?" → looks into chat history +
 	1.	Every query can hit RAG (with routing to PR/Code/Req source as needed).
 	2.	Frontend sends minimal data.
 	3.	Backend  manages session state with LLamaindex.
+
+    run app using: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
