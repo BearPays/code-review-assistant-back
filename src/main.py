@@ -67,23 +67,13 @@ async def chat_endpoint(request: ChatRequest):
 
     response_text = ""
     try:
-        # Mode Handling based on requirements_spec.md
-        if request.mode == "co_reviewer" and request.query.lower() == "start review":
-            # FR5: Trigger initial review summary
-            # We need a specific prompt/query for the agent to generate the summary
-            initial_summary_prompt = "Generate a comprehensive initial code review summary covering potential issues, style, security, and requirement adherence." 
-            print("Mode: Co-Reviewer - Generating initial summary...")
-            # Use chat or run depending on whether you want streaming/async handling
-            # agent.chat preserves conversation history within the agent instance
-            response = await agent.achat(initial_summary_prompt) 
+        # Process the query directly, as the appropriate tool will be selected based on the query
+        # The review_tool (start_review) will handle "start review" queries in co_reviewer mode
+        if request.mode == "interactive_assistant" or request.mode == "co_reviewer":
+            print(f"Mode: {request.mode} - Processing query: {request.query}")
+            response = await agent.achat(request.query)
             response_text = str(response)
-            print(f"Initial summary generated: {response_text[:100]}...") # Log snippet
-        elif request.mode == "interactive_assistant" or request.mode == "co_reviewer": 
-             # FR6 & Follow-up for FR5
-             print(f"Mode: {request.mode} - Processing query: {request.query}")
-             response = await agent.achat(request.query) 
-             response_text = str(response)
-             print(f"Agent response: {response_text[:100]}...") # Log snippet
+            print(f"Agent response: {response_text[:100]}...") # Log snippet
         else:
             raise HTTPException(status_code=400, detail=f"Invalid mode: {request.mode}")
 
