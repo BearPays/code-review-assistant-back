@@ -131,7 +131,7 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
                 index = load_index_from_storage(storage_context)
                 
                 # Get appropriate parameters based on collection type
-                similarity_top_k = 10  # Retrieve more results for better context
+                similarity_top_k = 5  # Retrieve more results for better context
                 
                 # For PR data (JSON), adjust query parameters to better handle structured data, with a filter-capable query engine
                 if "pr_data" in config["collection_name"]:
