@@ -1,8 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 import uvicorn
 import os
+import uuid
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -28,10 +31,14 @@ class ChatRequest(BaseModel):
     query: str
     mode: str # "co_reviewer" or "interactive_assistant"
     pr_id: str
-    # session_id: str # Add if needed for more robust session management
+    session_id: Optional[str] = None
 
 class ChatResponse(BaseModel):
-    response: str
+    answer: str
+    timestamp: datetime = None
+    mode: str  # Mode used for the response ("co_reviewer" or "interactive_assistant")
+    pr_id: str  # PR ID associated with this response
+    session_id: Optional[str] = None
     # chat_history: list # Optionally return history
 
 # --- API Endpoint ---
@@ -42,15 +49,21 @@ async def chat_endpoint(request: ChatRequest):
     
     print(f"Received request: {request.dict()}")
     
-    agent = get_agent_for_pr(request.pr_id, request.mode)
+    # Check if session_id is None and generate a new one if needed
+    session_id = request.session_id
+    if session_id is None:
+        session_id = str(uuid.uuid4())
+        print(f"Created new session_id: {session_id}")
+    
+    agent = get_agent_for_pr(request.pr_id, request.mode, session_id)
     
     if agent is None:
-        print(f"Error: Failed to get or create agent for pr_id {request.pr_id}")
+        print(f"Error: Failed to get or create agent for pr_id {request.pr_id} and session {session_id}")
         raise HTTPException(status_code=500, detail=f"Could not initialize agent for PR ID: {request.pr_id}. Check index availability and logs.")
 
     # Add user message to history *before* calling agent for context
     # (Though ReActAgent manages internal memory, explicit history can be useful)
-    add_to_chat_history(request.pr_id, {"role": "user", "content": request.query})
+    add_to_chat_history(session_id, {"role": "user", "content": request.query})
 
     response_text = ""
     try:
@@ -75,17 +88,26 @@ async def chat_endpoint(request: ChatRequest):
             raise HTTPException(status_code=400, detail=f"Invalid mode: {request.mode}")
 
         # Add assistant response to history
-        add_to_chat_history(request.pr_id, {"role": "assistant", "content": response_text})
+        add_to_chat_history(session_id, {"role": "assistant", "content": response_text})
         
         # Optional: Log full history for debugging
-        # print(f"Chat History for {request.pr_id}: {get_chat_history(request.pr_id)}")
+        # print(f"Chat History for session {session_id}: {get_chat_history(session_id)}")
         
-        return ChatResponse(response=response_text)
+        chat_response = ChatResponse(
+            answer=response_text,
+            timestamp=datetime.now(),
+            mode=request.mode,
+            pr_id=request.pr_id,
+            session_id=session_id
+        )
+        
+        # Return the response
+        return chat_response
 
     except Exception as e:
-        print(f"Error during agent interaction for pr_id {request.pr_id}: {e}")
-        # Add error indicator to history?
-        add_to_chat_history(request.pr_id, {"role": "system", "content": f"Error processing request: {e}"})
+        print(f"Error during agent interaction for session {session_id} (PR: {request.pr_id}): {e}")
+        # Add error indicator to history
+        add_to_chat_history(session_id, {"role": "system", "content": f"Error processing request: {e}"})
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 # --- Root Endpoint (Optional) ---

@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import List, Dict
 from dotenv import load_dotenv
+import uuid
 
 import chromadb
 from llama_index.core import Settings, StorageContext, load_index_from_storage, VectorStoreIndex
@@ -284,35 +285,61 @@ def create_agent(pr_id: str, mode: str) -> ReActAgent:
     )
     return agent
 
-# --- Placeholder for Session Management ---
-# A simple dictionary to hold agent instances per session_id (or pr_id for now)
-# In a real app, use a more robust session management solution
+# --- Session Management ---
+# Dictionaries to hold agent instances and chat history per session_id
+# In a real app, use a more robust session management solution with persistence
 agent_sessions: Dict[str, ReActAgent] = {} 
-chat_history: Dict[str, List] = {} # Basic chat history store
+chat_history: Dict[str, List] = {} 
 
-def get_agent_for_pr(pr_id: str, mode: str) -> ReActAgent:
-    """Gets or creates an agent instance for a given PR ID and mode."""
-    if pr_id not in agent_sessions:
-        print(f"Creating new agent for pr_id: {pr_id} with mode: {mode}")
-        agent_sessions[pr_id] = create_agent(pr_id, mode)
-        chat_history[pr_id] = [] # Initialize chat history
+def get_agent_for_pr(pr_id: str, mode: str, session_id: str = None) -> ReActAgent:
+    """
+    Gets or creates an agent instance for a given session.
+    
+    Args:
+        pr_id: The PR ID to load data for
+        mode: The interaction mode ("co_reviewer" or "interactive_assistant")
+        session_id: The unique session identifier (if None, pr_id will be used as fallback)
+    
+    Returns:
+        ReActAgent instance or None if creation failed
+    """
+    # Use session_id if provided, otherwise fall back to pr_id for backward compatibility
+    session_key = session_id if session_id else pr_id
+    
+    if session_key not in agent_sessions:
+        print(f"Creating new agent for session: {session_key} (PR: {pr_id}, Mode: {mode})")
+        agent_sessions[session_key] = create_agent(pr_id, mode)
+        chat_history[session_key] = [] # Initialize chat history
     # Ensure agent creation was successful
-    if agent_sessions.get(pr_id) is None:
+    if agent_sessions.get(session_key) is None:
          # Handle the case where agent creation failed in create_agent
-         # You might need to return an error response to the user
-         print(f"Error: Agent for pr_id {pr_id} could not be initialized.")
+         print(f"Error: Agent for session {session_key} (PR: {pr_id}) could not be initialized.")
          # Returning None, the caller (e.g., FastAPI endpoint) must handle this
          return None
-    return agent_sessions[pr_id]
+    return agent_sessions[session_key]
 
-def get_chat_history(pr_id: str) -> List:
-     """Gets chat history for a given PR ID."""
-     return chat_history.get(pr_id, [])
+def get_chat_history(session_id: str) -> List:
+     """
+     Gets chat history for a given session ID.
+     
+     Args:
+         session_id: The unique session identifier
+         
+     Returns:
+         List of chat messages for the session or empty list if not found
+     """
+     return chat_history.get(session_id, [])
 
-def add_to_chat_history(pr_id: str, message):
-     """Adds a message to the chat history."""
-     if pr_id in chat_history:
-         chat_history[pr_id].append(message)
+def add_to_chat_history(session_id: str, message):
+     """
+     Adds a message to the chat history.
+     
+     Args:
+         session_id: The unique session identifier
+         message: The message to add to the history
+     """
+     if session_id in chat_history:
+         chat_history[session_id].append(message)
 
 # --- Example Usage (Optional, for testing) ---
 if __name__ == "__main__":
@@ -321,10 +348,13 @@ if __name__ == "__main__":
     
     # Test with a specific PR ID that should have indexed data
     test_pr_id = "project_2"  # Replace with an actual PR ID from your indexed data
+    test_mode = "co_reviewer"
+    # Create a test session ID (simulating what would happen in the FastAPI endpoint)
+    test_session_id = str(uuid.uuid4())
     
-    print(f"\n--- Testing Agent with PR ID: {test_pr_id} ---")
+    print(f"\n--- Testing Agent with PR ID: {test_pr_id}, Mode: {test_mode}, Session ID: {test_session_id} ---")
     # Specify co_reviewer mode to test the review functionality
-    test_agent = get_agent_for_pr(test_pr_id, "co_reviewer")
+    test_agent = get_agent_for_pr(test_pr_id, test_mode, test_session_id)
 
     if test_agent:
         print("\n--- Testing Agent ---")
@@ -335,28 +365,49 @@ if __name__ == "__main__":
         # In the real app, this is triggered internally, not by user query text
         response = test_agent.chat(initial_review_query) 
         print(f"Initial Review Response: {response}")
-        add_to_chat_history(test_pr_id, {"role": "assistant", "content": str(response)})
+        add_to_chat_history(test_session_id, {"role": "assistant", "content": str(response)})
 
         # Test interactive query
         print("\n--- Testing Interactive Query ---")
         query = "What does the code do based on the requirements?"
-        add_to_chat_history(test_pr_id, {"role": "user", "content": query})
+        add_to_chat_history(test_session_id, {"role": "user", "content": query})
         response = test_agent.chat(query) 
         print(f"Query: {query}")
         print(f"Response: {response}")
-        add_to_chat_history(test_pr_id, {"role": "assistant", "content": str(response)})
+        add_to_chat_history(test_session_id, {"role": "assistant", "content": str(response)})
 
         # Test follow-up query using history
         print("\n--- Testing Follow-up Query ---")
         follow_up_query = "Are there any potential issues?"
-        add_to_chat_history(test_pr_id, {"role": "user", "content": follow_up_query})
+        add_to_chat_history(test_session_id, {"role": "user", "content": follow_up_query})
         response = test_agent.chat(follow_up_query) 
         print(f"Follow-up Query: {follow_up_query}")
         print(f"Response: {response}")
-        add_to_chat_history(test_pr_id, {"role": "assistant", "content": str(response)})
+        add_to_chat_history(test_session_id, {"role": "assistant", "content": str(response)})
         
         print("\n--- Current Chat History ---")
-        print(get_chat_history(test_pr_id))
+        print(get_chat_history(test_session_id))
 
+        # Test mode switching with same session ID (should reuse the same agent)
+        print("\n--- Testing Mode Switching with Same Session ---")
+        different_mode = "interactive_assistant"
+        print(f"Switching mode to: {different_mode} (should reuse agent)")
+        mode_switch_agent = get_agent_for_pr(test_pr_id, different_mode, test_session_id)
+        print(f"Same agent instance? {mode_switch_agent is test_agent}")
+        
+        # Test PR switching with same session ID (should create a new agent)
+        print("\n--- Testing Project Switching with Same Session ---")
+        different_pr = "project_1"  # Assuming this project also exists
+        print(f"Switching PR to: {different_pr}")
+        different_pr_agent = get_agent_for_pr(different_pr, test_mode, test_session_id)
+        print(f"Same agent instance? {different_pr_agent is test_agent}")
+        
+        # Test a completely new session (should create a new agent)
+        print("\n--- Testing New Session ---")
+        new_session_id = str(uuid.uuid4())
+        print(f"Creating new session ID: {new_session_id}")
+        new_session_agent = get_agent_for_pr(test_pr_id, test_mode, new_session_id)
+        print(f"Same agent instance? {new_session_agent is test_agent}")
+        
     else:
-        print(f"Could not run test: Agent creation failed for pr_id {test_pr_id}.")
+        print(f"Could not run test: Agent creation failed for pr_id {test_pr_id}, session {test_session_id}.")
