@@ -73,7 +73,6 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
                 "DO NOT use this tool for questions about changes, diffs, or what was modified - it cannot answer these. "
                 "Use only for questions about implementation details, code structure, or how specific functionality works "
                 "Use this tool to gain more context about the code and the specific changes by looking upp the complete codefiles, but be aware that it does not reflect any changes made in the PR."
-                "in the CURRENT state of the code."
             ),
         },
         {
