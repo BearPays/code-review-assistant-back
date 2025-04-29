@@ -59,6 +59,7 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
                 "For example, if a file at 'internal/integration/security_reentrant/oas_schemas_gen.go' was modified, "
                 "its JSON file will be at 'modified_files/internal/integration/security_reentrant/oas_schemas_gen.go.json'. "
                 "Each JSON file contains the 'filename', 'status', 'additions', 'deletions', and 'diff' information. "
+                "In the root directory, there is a file called pr_metadata.json that contains information about the PR as a whole. Including a list of files that were changed as well as other metadata."
                 "When using this tool for diffs, try queries like 'Show changes to file X' or 'Find diffs in the security module'. "
                 "This is the FIRST tool to use for ANY query about what files were changed or how they were modified."
                 "This is also the first tool to use when generating an initial code review. "
@@ -70,7 +71,7 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
             "collection_name": f"{pr_id}_source_code",
             "description": (
                 "INITIAL CODE STATE ONLY: This tool searches the initial state of the code before all changes. "
-                "DO NOT use this tool for questions about changes, diffs, or what was modified - it cannot answer these. "
+                "DO NOT use this tool for questions about changes, diffs, or what was modified - unless you want to compare the original code with the changes made in the PR. "
                 "Use only for questions about implementation details, code structure, or how specific functionality works "
                 "Use this tool to gain more context about the code and the specific changes by looking upp the complete codefiles, but be aware that it does not reflect any changes made in the PR."
             ),
@@ -82,6 +83,8 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
             "description": (
                 "FEATURE REQUIREMENTS ONLY: Use this tool to search the feature requirements and specifications. "
                 "This includes acceptance criteria, user stories, and what the PR is supposed to accomplish. "
+                "Use this tool for example to compare the code changes with the feature requirements."
+                "This tool can also be used to identify which changes are relevant to the feature being implemented in the PR."
                 "Do not use this for code or PR change questions."
             ),
         },
@@ -257,7 +260,7 @@ def create_agent(pr_id: str, mode: str) -> ReActAgent:
     )
 
     # Add the debug tool to the list
-    query_engine_tools.append(debug_tool)
+    # query_engine_tools.append(debug_tool)
     
     # Add the review tool, but only in co_reviewer mode
     if mode == "co_reviewer":
