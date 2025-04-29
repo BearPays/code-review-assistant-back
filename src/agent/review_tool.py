@@ -6,6 +6,7 @@ from llama_index.core.tools import QueryEngineTool, FunctionTool, ToolMetadata
 from llama_index.llms.openai import OpenAI
 
 from .pr_data import get_pr_data
+from .model_constants import OPENAI_LLM_MODEL
 
 # Review-specific system prompt that focuses on instructions rather than data
 REVIEW_SYSTEM_PROMPT = """
@@ -142,7 +143,7 @@ def create_review_tool(tools: List[QueryEngineTool], pr_id: str) -> FunctionTool
             # First create the agent with condensed instruction prompt
             review_agent = ReActAgent.from_tools(
                 tools=filtered_tools,
-                llm=OpenAI(model="o4-mini"),  # Use the same model as main agent
+                llm=OpenAI(model=OPENAI_LLM_MODEL),  # Use the same model as main agent
                 system_prompt=REVIEW_SYSTEM_PROMPT,
                 max_iterations=30,  # Allow more iterations for detailed review
                 verbose=True  # Keep verbose to see thought process

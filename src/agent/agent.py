@@ -15,6 +15,7 @@ from llama_index.core.response_synthesizers import get_response_synthesizer
 
 from .prompts import SYSTEM_PROMPT_CO_REVIEWER, SYSTEM_PROMPT_INTERACTIVE_ASSISTANT
 from .review_tool import create_review_tool
+from .model_constants import OPENAI_LLM_MODEL, OPENAI_EMBEDDING_MODEL
 
 # --- Settings ---
 # Load environment variables from .env file
@@ -26,8 +27,8 @@ if "OPENAI_API_KEY" in os.environ:
 else:
     print("❌ OPENAI_API_KEY environment variable is NOT set. Please check your .env file.")
 
-Settings.llm = OpenAI(model="o4-mini")
-Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+Settings.llm = OpenAI(model=OPENAI_LLM_MODEL)
+Settings.embed_model = OpenAIEmbedding(model=OPENAI_EMBEDDING_MODEL)
 
 # --- Index Loading ---
 def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:

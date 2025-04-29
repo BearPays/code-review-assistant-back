@@ -26,6 +26,9 @@ from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.embeddings.openai import OpenAIEmbedding
 
+# Import model constants from local file
+from .model_constants import HF_EMBEDDING_MODEL, OPENAI_EMBEDDING_MODEL
+
 # === Constants and Configuration ===
 load_dotenv()
 
@@ -44,8 +47,9 @@ TEXT_EXTENSIONS = {".txt", ".md"}
 
 EXCLUDE_DIRS = {"node_modules", "__pycache__", "venv", ".git", ".idea", ".vscode", "dist", "build"}
 
-DEFAULT_HF_EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
-DEFAULT_OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
+# Use imported constants
+DEFAULT_HF_EMBEDDING_MODEL = HF_EMBEDDING_MODEL
+DEFAULT_OPENAI_EMBEDDING_MODEL = OPENAI_EMBEDDING_MODEL
 USE_HF_EMBEDDING = os.getenv("USE_HF_EMBEDDING", "false").lower() == "true"
 FORCE_REINDEX = os.getenv("FORCE_REINDEX", "false").lower() == "true"
 
