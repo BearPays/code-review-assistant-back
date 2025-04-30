@@ -6,6 +6,14 @@ import os
 import uuid
 from dotenv import load_dotenv
 from datetime import datetime
+import json
+
+# Custom JSON encoder to handle datetime objects
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -31,6 +39,7 @@ class ChatRequest(BaseModel):
     query: str
     mode: str # "co_reviewer" or "interactive_assistant"
     pr_id: str
+    participant_id: Optional[str] = None
     session_id: Optional[str] = None
 
 class ChatResponse(BaseModel):
@@ -54,6 +63,22 @@ async def chat_endpoint(request: ChatRequest):
     if session_id is None:
         session_id = str(uuid.uuid4())
         print(f"Created new session_id: {session_id}")
+
+    # Logging configuration
+    LOGGING_ENABLED = os.getenv("CHAT_LOGGING_ENABLED", "false").lower() in ("1","true","yes")
+    LOG_DIR = os.getenv("CHAT_LOG_DIR", "logs")
+    if LOGGING_ENABLED:
+        os.makedirs(LOG_DIR, exist_ok=True)
+
+    def persist_log(session_id: str, entry: dict):
+        if not LOGGING_ENABLED:
+            return
+        log_path = os.path.join(LOG_DIR, f"{session_id}.log")
+        with open(log_path, "a") as f:
+            f.write(json.dumps(entry, cls=DateTimeEncoder) + "\n")
+    # Persist full request object
+    request_data = request.dict()
+    persist_log(session_id or "uninitialized", {"type": "request", **request_data})
     
     agent = get_agent_for_pr(request.pr_id, request.mode, session_id)
     
@@ -90,6 +115,8 @@ async def chat_endpoint(request: ChatRequest):
             pr_id=request.pr_id,
             session_id=session_id
         )
+        # Persist full response object
+        persist_log(session_id, {"type": "response", **chat_response.dict()})
         
         # Return the response
         return chat_response
