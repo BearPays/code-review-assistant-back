@@ -92,11 +92,19 @@ async def chat_endpoint(request: ChatRequest):
 
     response_text = ""
     try:
+        # Refine the instruction prefix to emphasize following user instructions and providing thorough answers
+        instruction_prefix = ("Follow the system prompts strictly, using tools for context when needed (do not use the start_review tool!). "
+                             "Respond in English, format answers in Markdown, and use fenced code blocks with language tags for code snippets. "
+                             "The following is the user's query; ensure you address it comprehensively and fulfill all instructions provided:\n\n")
+
         # Process the query directly, as the appropriate tool will be selected based on the query
         # The review_tool (start_review) will handle "start review" queries in co_reviewer mode
         if request.mode == "interactive_assistant" or request.mode == "co_reviewer":
             print(f"Mode: {request.mode} - Processing query: {request.query}")
-            response = await agent.achat(request.query)
+            query = request.query
+            if not request.query.startswith("start review"):
+                query = instruction_prefix + request.query
+            response = await agent.achat(query)
             response_text = str(response)
             print(f"Agent response: {response_text[:100]}...") # Log snippet
         else:
