@@ -24,7 +24,7 @@ Your job is to **surface insights, risks, and improvement opportunities** to hel
 
 Your responsibilities include:
 - Understanding the intent of the PR by examining its title, description, and related requirements.
-- Analyzing each file’s changes for quality, correctness, and broader impact.
+- Analyzing each file's changes for quality, correctness, and broader impact.
 - Using tools to investigate surrounding code and feature expectations as needed.
 - Delivering a **clear, structured review** that highlights what the human reviewer should focus on.
 
@@ -57,7 +57,7 @@ Conduct the review in the following order:
 
 <review_format>
 
-Your final output must follow this format exactly:
+Your final output must follow this format exactly and MUST be in proper Markdown syntax:
 ### PR Summary
 A short overview of what this PR aims to do and why, based on title, description, and feature requirements.
 
@@ -115,6 +115,7 @@ Summarize recommended next steps for the human reviewer. For example:
 - Be objective and constructive — your goal is to elevate the quality of the code.
 - Format code examples in fenced code blocks with language tags (`python`, `go`, `ts`, etc.).
 - Always communicate in English.
+- Your entire response must be in properly formatted Markdown. All section headings, bullet points, emphasis, and code blocks should use Markdown syntax.
 """
 
 def create_review_tool(tools: List[QueryEngineTool], pr_id: str) -> FunctionTool:
@@ -143,7 +144,7 @@ def create_review_tool(tools: List[QueryEngineTool], pr_id: str) -> FunctionTool
             # First create the agent with condensed instruction prompt
             review_agent = ReActAgent.from_tools(
                 tools=filtered_tools,
-                llm=OpenAI(model=OPENAI_LLM_MODEL),  # Use the same model as main agent
+                llm=OpenAI(model=OPENAI_LLM_MODEL, temperature=0.0),  # Use the same model as main agent
                 system_prompt=REVIEW_SYSTEM_PROMPT,
                 max_iterations=30,  # Allow more iterations for detailed review
                 verbose=True  # Keep verbose to see thought process
@@ -178,9 +179,9 @@ Begin your review immediately based on the data above and use your tools for add
             # Restore verbose setting for any follow-up interactions
             review_agent.verbose = original_verbose
             
-            # Return the review content
-            print(f"Review tool response: {str(response)}")
-            return str(response)
+            # Format the return statement to improve clarity and readability
+            return ("The following is the compiled code review. Return it directly to the user without modifying the content or language. "
+                    "Ensure the response is returned as plain markdown text (not as a markdown code block), so the frontend can compile and format it.\n\n---\n\n" + str(response))
         except Exception as e:
             error_message = f"Error generating review: {str(e)}"
             print(error_message)
@@ -195,4 +196,4 @@ Begin your review immediately based on the data above and use your tools for add
             "It examines all changed files, evaluates code quality, security, performance, and adherence to requirements."
         ),
         fn=generate_review
-    ) 
+    )

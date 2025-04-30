@@ -27,7 +27,7 @@ if "OPENAI_API_KEY" in os.environ:
 else:
     print("❌ OPENAI_API_KEY environment variable is NOT set. Please check your .env file.")
 
-Settings.llm = OpenAI(model=OPENAI_LLM_MODEL)
+Settings.llm = OpenAI(model=OPENAI_LLM_MODEL, temperature=0.0)
 Settings.embed_model = OpenAIEmbedding(model=OPENAI_EMBEDDING_MODEL)
 
 # --- Index Loading ---
