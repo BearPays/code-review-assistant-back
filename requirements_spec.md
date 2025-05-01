@@ -99,4 +99,9 @@ E.g. query = "What are the main security changes?" → looks into chat history +
 	2.	Frontend sends minimal data.
 	3.	Backend  manages session state with LLamaindex.
 
-    run app using: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+# Execution instructions
+
+run app using: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+Add to venv activate script (for sqlite version):
+export LD_LIBRARY_PATH=/opt/sqlite/lib:$LD_LIBRARY_PATH

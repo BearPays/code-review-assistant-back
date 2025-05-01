@@ -2,6 +2,8 @@
 """
 Script to index documents from data/ directory using LlamaIndex and ChromaDB.
 This creates a persisted index that can be loaded by the FastAPI application.
+
+Run: python -m scripts.index_data
 """
 
 import os

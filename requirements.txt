@@ -8,4 +8,4 @@ python-dotenv
 chromadb
 llama-index-vector-stores-chroma
 llama-index-embeddings-huggingface
-# Add other dependencies as needed
+# pip install -r requirements.txt --index-url https://pypi.org/simple
