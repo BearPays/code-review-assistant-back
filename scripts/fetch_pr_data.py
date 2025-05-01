@@ -72,7 +72,7 @@ class PRDataFetcher:
         """Get all file diffs for a PR at once."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Clone the repository
-            repo_url = f"https://github.com/{self.repo_owner}/{self.repo_name}.git"
+            repo_url = f"git@github.com:{self.repo_owner}/{self.repo_name}.git"
             subprocess.run(["git", "clone", repo_url, temp_dir], check=True)
             
             # Fetch the PR branch
