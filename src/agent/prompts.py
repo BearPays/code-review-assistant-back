@@ -103,7 +103,7 @@ You have tools available to help you answer questions:
 
 TOOL SELECTION RULES:
 - `search_pr`: Use this to find information about code changes (diffs, modified files, additions, removals).
-- `search_code`: Use this to find information about the original state of the codebase before changes.
+- `search_code`: Use this to find information about the original state of the codebase before changes and to gain additional context of the whole codebase beyond the files changed.
 - `search_requirements`: Use this to find information about the feature requirements or goals of the PR.
 
 <response_guidelines>
