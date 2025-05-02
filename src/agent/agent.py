@@ -282,7 +282,7 @@ def create_agent(pr_id: str, mode: str) -> ReActAgent:
     agent = ReActAgent.from_tools(
         tools=query_engine_tools,
         llm=Settings.llm,
-        system_prompt=system_prompt,
+        context=system_prompt,
         max_iterations=10,
         verbose=True # Set to False in production
     )

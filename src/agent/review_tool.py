@@ -141,11 +141,11 @@ def create_review_tool(tools: List[QueryEngineTool], pr_id: str) -> FunctionTool
             # Get PR data
             pr_data = get_pr_data(pr_id)
             
-            # First create the agent with condensed instruction prompt
+            # Create a sub-agent that uses our review-specific prompt as context
             review_agent = ReActAgent.from_tools(
                 tools=filtered_tools,
                 llm=OpenAI(model=OPENAI_LLM_MODEL, temperature=0.0),  # Use the same model as main agent
-                system_prompt=REVIEW_SYSTEM_PROMPT,
+                context=REVIEW_SYSTEM_PROMPT,
                 max_iterations=30,  # Allow more iterations for detailed review
                 verbose=True  # Keep verbose to see thought process
             )
