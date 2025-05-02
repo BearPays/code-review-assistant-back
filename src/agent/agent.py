@@ -55,7 +55,7 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
                 "PRIMARY TOOL FOR CODE CHANGES: Use this tool for ANY questions about file diffs, changes, or modifications. "
                 "This is THE ONLY tool that can answer questions about what was changed in the PR. "
                 "The PR data is organized into multiple files: a main PR metadata file and individual files for each changed file in the PR. "
-                "The metadata file contains information like 'pr_number', 'title', 'description', 'author', 'state', etc., and a 'file_summaries' list showing files changed. "
+                "The metadata file contains information like 'pr_number', 'title', 'description', 'author', 'state', etc., and a 'file_summaries' list showing files changed. so search for that file when you need to find the metadata. such as list of changed files. "
                 "Each modified file has its own JSON file in the 'modified_files' directory, preserving the original file path structure. "
                 "For example, if a file at 'internal/integration/security_reentrant/oas_schemas_gen.go' was modified, "
                 "its JSON file will be at 'modified_files/internal/integration/security_reentrant/oas_schemas_gen.go.json'. "
