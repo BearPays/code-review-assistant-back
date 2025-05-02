@@ -69,8 +69,8 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
             "name": "search_code",
             "collection_name": f"{pr_id}_source_code",
             "description": (
-                "INITIAL CODE STATE ONLY: This tool searches the initial state of the code before all changes. "
-                "DO NOT use this tool for questions about changes, diffs, or what was modified - unless you want to compare the original code with the changes made in the PR. "
+                "INITIAL CODE STATE ONLY: This tool searches the initial state of the code before all changes. It contains the whole codebase, not just the changes made in the PR. "
+                "Use this tool to compare the original code with the changes made in the PR. "
                 "Use only for questions about implementation details, code structure, or how specific functionality works "
                 "Use this tool to gain more context about the code and the specific changes by looking upp the complete codefiles, but be aware that it does not reflect any changes made in the PR."
             ),
@@ -80,11 +80,10 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
             "name": "search_requirements",
             "collection_name": f"{pr_id}_pr_feature", 
             "description": (
-                "FEATURE REQUIREMENTS ONLY: Use this tool to search the feature requirements and specifications. "
-                "This includes acceptance criteria, user stories, and what the PR is supposed to accomplish. "
-                "Use this tool for example to compare the code changes with the feature requirements."
-                "This tool can also be used to identify which changes are relevant to the feature being implemented in the PR."
-                "Do not use this for code or PR change questions."
+                "FEATURE REQUIREMENT ONLY: Use this tool to understand the underlying feature linked to the PR. "
+                "This includes an single file, containing a JIRA ticket with information about the feature being implemented in the PR. "
+                "Use this tool for example to compare the code changes with the feature requirement."
+                "This tool can also be used with other tools to identify which changes are relevant to the feature being implemented in the PR."
             ),
         },
     ]
