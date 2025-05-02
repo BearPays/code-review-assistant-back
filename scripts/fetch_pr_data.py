@@ -21,6 +21,9 @@ load_dotenv()
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 PR_DATA_DIR = os.path.join(DATA_DIR, "pr_data")
 
+# Load GitHub base URL from environment variables
+GITHUB_BASE_URL = os.getenv("GITHUB_BASE_URL", "git@github.com")
+
 class PRDataFetcher:
     def __init__(self, token: str, repo_owner: str, repo_name: str):
         self.token = token
@@ -72,7 +75,7 @@ class PRDataFetcher:
         """Get all file diffs for a PR at once."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Clone the repository
-            repo_url = f"git@github.com:{self.repo_owner}/{self.repo_name}.git"
+            repo_url = f"{GITHUB_BASE_URL}:{self.repo_owner}/{self.repo_name}.git"
             subprocess.run(["git", "clone", repo_url, temp_dir], check=True)
             
             # Fetch the PR branch
@@ -109,18 +112,20 @@ def process_pr_data(pr_data: Dict, fetcher: PRDataFetcher) -> Dict:
     files = fetcher.fetch_pr_files(pr_number)
     comments = fetcher.fetch_pr_comments(pr_number)
     reviews = fetcher.fetch_pr_reviews(pr_number)
-    
-    # Get all file diffs at once
-    print("  Fetching all file diffs...")
-    file_diffs = fetcher.get_file_diff(pr_number)
-    print(f"  Found {len(file_diffs)} changed files")
-    
+ 
+    file_diffs = {}
+    print("  Processing file diffs using API (with Git fallback if needed)...")
+ 
     # Process files with diffs
     processed_files = []
     for file in files:
         try:
-            diff = file_diffs.get(file["filename"], "")
-            
+            diff = file.get("patch")
+            if not diff:
+                if not file_diffs:
+                    file_diffs = fetcher.get_file_diff(pr_number)
+                diff = file_diffs.get(file["filename"], "")
+           
             # Split diff into chunks for better LLM processing
             diff_chunks = []
             current_chunk = []
@@ -212,7 +217,7 @@ def main():
     
     try:
         # Specific PR numbers to fetch
-        target_prs = [1440, 1441]
+        target_prs = []
         print(f"\nFetching specific pull requests: {target_prs}")
         
         # Process each target PR
@@ -247,4 +252,4 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main() 
+    main()
