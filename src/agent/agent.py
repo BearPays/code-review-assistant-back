@@ -55,15 +55,13 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
                 "PRIMARY TOOL FOR CODE CHANGES: Use this tool for ANY questions about file diffs, changes, or modifications. "
                 "This is THE ONLY tool that can answer questions about what was changed in the PR. "
                 "The PR data is organized into multiple files: a main PR metadata file and individual files for each changed file in the PR. "
-                "The metadata file contains information like 'pr_number', 'title', 'description', 'author', 'state', etc. "
+                "The metadata file contains information like 'pr_number', 'title', 'description', 'author', 'state', etc., and a 'file_summaries' list showing files changed. "
                 "Each modified file has its own JSON file in the 'modified_files' directory, preserving the original file path structure. "
                 "For example, if a file at 'internal/integration/security_reentrant/oas_schemas_gen.go' was modified, "
                 "its JSON file will be at 'modified_files/internal/integration/security_reentrant/oas_schemas_gen.go.json'. "
-                "Each JSON file contains the 'filename', 'status', 'additions', 'deletions', and 'diff' information. "
-                "In the root directory, there is a file called pr_metadata.json that contains information about the PR as a whole. Including a list of files that were changed as well as other metadata."
-                "When using this tool for diffs, try queries like 'Show changes to file X' or 'Find diffs in the security module'. "
-                "This is the FIRST tool to use for ANY query about what files were changed or how they were modified."
-                "This is also the first tool to use when generating an initial code review. "
+                "Each file-level JSON contains fields like 'filename', 'status', 'additions', 'deletions', and importantly, two diff representations: "
+                "'diff_chunks' (a list of specific hunks of changes) and 'full_diff' (the complete unified diff as a string). "
+                "Use this tool for queries like 'Show changes to file X', 'Find diffs in the security module', or 'What logic was added in module Y?'. "
             ),
         },
         {
