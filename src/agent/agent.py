@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import uuid
 
 import chromadb
-from llama_index.core import Settings, StorageContext, load_index_from_storage, VectorStoreIndex
+from llama_index.core import Settings, StorageContext, load_index_from_storage, VectorStoreIndex, PromptTemplate
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.agent import ReActAgent
 from llama_index.core.tools import QueryEngineTool, ToolMetadata, FunctionTool
@@ -275,14 +275,24 @@ def create_agent(pr_id: str, mode: str) -> ReActAgent:
         print(f"Error: Invalid mode {mode}")
         return None
 
+    # Use a custom ReActChatFormatter with the full system prompt
+    from llama_index.core.agent.react.formatter import ReActChatFormatter
+    custom_formatter = ReActChatFormatter.from_defaults(system_header=system_prompt)
     print(f"Creating ReActAgent with {len(query_engine_tools)} tools for {pr_id} in mode {mode}")
     agent = ReActAgent.from_tools(
         tools=query_engine_tools,
         llm=Settings.llm,
-        context=system_prompt,
+        react_chat_formatter=custom_formatter,
         max_iterations=10,
-        verbose=True # Set to False in production
+        verbose=True,  # Set to False in production
     )
+    # Override system prompts using PromptTemplate.from_defaults to fill required placeholders
+    custom_prompt_template = PromptTemplate(system_prompt)
+    agent.update_prompts({
+        "react_header": custom_prompt_template,
+    })
+    prompts = agent.get_prompts()
+    print(prompts)
     return agent
 
 # --- Session Management ---

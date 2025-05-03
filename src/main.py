@@ -102,8 +102,8 @@ async def chat_endpoint(request: ChatRequest):
         if request.mode == "interactive_assistant" or request.mode == "co_reviewer":
             print(f"Mode: {request.mode} - Processing query: {request.query}")
             query = request.query
-            if not request.query.startswith("start review"):
-                query = instruction_prefix + request.query
+            #if not request.query.startswith("start review"):
+            #    query = instruction_prefix + request.query
             response = await agent.achat(query)
             response_text = str(response)
             print(f"Agent response: {response_text[:100]}...") # Log snippet
