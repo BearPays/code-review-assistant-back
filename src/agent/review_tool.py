@@ -40,8 +40,8 @@ A concise overview of this PR's goal and requirement alignment.
 This PR appears to be **[low / medium / high] risk** for merge based on initial review.
 
 - Requirement coverage: ✅ Complete / ⚠️ Partial / ❌ Missing
-- Code quality: ✅ Clean / ⚠️ Minor issues / ❌ Significant concerns
-- Test sufficiency: ✅ Sufficient / ⚠️ Needs improvement / ❌ Missing critical tests
+- Code quality: ✅ Clean / ⚠️ Possible issues / ❌ Significant concerns
+- Test sufficiency: ✅ Sufficient / ⚠️ Might need improvement / ❌ Missing critical tests
 
 **Note:** Final pass/fail decision is deferred to the human reviewer.
 
