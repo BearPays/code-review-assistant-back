@@ -42,7 +42,7 @@ COLLECTION_NAME = "rag_collection"
 CODE_EXTENSIONS = {
     ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".h", ".cs",
     ".php", ".rb", ".go", ".swift", ".kt", ".rs", ".scala", ".sh",
-    ".html", ".css", ".json", ".yaml", ".yml", ".tmpl"
+    ".html", ".css", ".json", ".yaml", ".yml", ".tmpl", ".xml"
 }
 
 TEXT_EXTENSIONS = {".txt", ".md"}
@@ -66,7 +66,7 @@ EXTENSION_TO_LANGUAGE = {
     ".cs": "csharp", ".php": "php", ".rb": "ruby", ".go": "go", ".swift": "swift",
     ".kt": "kotlin", ".rs": "rust", ".scala": "scala", ".sh": "bash",
     ".html": "html", ".css": "css", ".sql": "sql", ".json": "json",
-    ".yaml": "yaml", ".yml": "yaml", ".tmpl": "go"
+    ".yaml": "yaml", ".yml": "yaml", ".tmpl": "go", ".xml": "xml"
 }
 
 # === Helper Functions ===
