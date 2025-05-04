@@ -53,34 +53,55 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
             "storage_dir": "storage_pr_data",
             "name": "search_pr",
             "collection_name": f"{pr_id}_pr_data",
-            "description": """PRIMARY TOOL FOR CODE CHANGES: Use this tool for ANY questions about file diffs, changes, or modifications.
-This is THE ONLY tool that can answer questions about what was changed in the PR.
-The PR data is organized into multiple files: a PR metadata file and individual files for each changed file in the PR.
-The metadata file contains information like 'pr_number', 'title', 'description', 'author', 'state', etc., and a 'file_summaries' list showing files changed. so search for that file when you need to find the metadata. such as list of changed files.
-Each modified file has its own JSON file in the 'modified_files' directory, preserving the original file path structure.
-For example, if a file at 'internal/integration/security_reentrant/oas_schemas_gen.go' was modified,
-its JSON file will be at 'modified_files/internal/integration/security_reentrant/oas_schemas_gen.go.json'.
-Each file-level JSON contains fields like 'filename', 'status', 'additions', 'deletions', and importantly, two diff representations:
-'diff_chunks' (a list of specific hunks of changes) and 'full_diff' (the complete unified diff as a string).
-Use this tool for queries like 'Show changes to file X', 'Find diffs in the security module', or 'What logic was added in module Y?'.""",
+            "description": """Provides detailed information about file diffs, changes, modifications and other information about the PR being reviewed. This is THE ONLY tool that can answer questions about code changes in the PR.
+**When to use:**  
+- Queries about specific diffs or code changes
+- Investigating additions, removals, or logic modifications
+- Questions about what files have changed in a PR
+**What it does:**  
+Retrieves data from structured PR files:
+- PR metadata file ('pr_number', 'title', 'description', 'author', 'state', 'changed_files'
+- Individual JSON files for each modified file stored in the modified_files directory, preserving original file path structure.
+	- For example, if a file at 'path/to/original/file.py' was modified, its JSON file would be located at 'modified_files/path/to/original/file.py.json'.
+- Each modified file JSON includes filename, status, additions, deletions, and detailed diff representations (diff_chunks, full_dif
+**Examples of tool use:**  
+- "Show changes to file 'path/to/file.py'"
+- "Show changes to module x"
+- "Find diffs in the security module"
+- "Show PR metadata" (this should ONLY be done if you need to see the full list of changed files or other metadata for the PR)
+**Limitations:**  
+- This tool only shows the parts of the files that were changed. not the complete file""",
         },
         {
             "storage_dir": "storage_source_code", 
             "name": "search_code",
             "collection_name": f"{pr_id}_source_code",
-            "description": """INITIAL CODE STATE ONLY: This tool searches the initial state of the code before all changes. It contains the whole codebase, not just the changes made in the PR.
-Use this tool to compare the original code with the changes made in the PR.
-Use only for questions about implementation details, code structure, or how specific functionality works
-Use this tool to gain more context about the code and the specific changes by looking upp the complete codefiles, but be aware that it does not reflect any changes made in the PR.""",
+            "description": """Searches the INITIAL STATE of the code before all changes. It contains the whole codebase, not just the files affected in the PR.
+**When to use:**  
+- To understand how the original codebase worked before any changes introduced in the PR.
+- To investigate original implementation details, code structure, or existing functionality.
+**What it does:**  
+- Searches and retrieves relevant parts of the code base based on the query.
+- This tool uses its own language model to generate an answer based on the retrieved code chunks and your query. It does not return the raw code chunks directly.
+**Examples of tool use:**  
+- "How is the authentication method implemented?"
+- "Show me the 'path/to/file.py' file?"
+**Limitations:**  
+- The source code is large and the tool may not return all relevant data.""",
         },
         {
             "storage_dir": "storage_pr_feature",
             "name": "search_requirements",
             "collection_name": f"{pr_id}_pr_feature", 
-            "description": """FEATURE REQUIREMENT ONLY: Use this tool to understand the underlying feature linked to the PR.
-This includes an single file, containing a JIRA ticket with information about the feature being implemented in the PR.
-Use this tool for example to compare the code changes with the feature requirement.
-This tool can also be used with other tools to identify which changes are relevant to the feature being implemented in the PR.""",
+            "description": """earches information regarding the feature being implemented in the PR. 
+**When to use:**  
+- To understand the business or functional goal behind the PR.
+**What it does:**  
+- searches the Jira ticket and returns relevant data based on the query.
+**Examples of tool use:**  
+- "Show me the feature being implemented in the PR and its requirements"
+**Limitations:**
+- Only retrieves the feature requirements. It does not evaluate whether the PR satisfies the requirements.""",
         },
     ]
 
