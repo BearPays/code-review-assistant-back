@@ -61,12 +61,12 @@ One-paragraph description of modifications.
 ---
 
 ### Cross-Cutting Concerns
-- **Security:** Any exposed credentials, input sanitization issues, debug logs, or OWASP Top 10 concerns?
-- **Performance:** Are there performance regressions, N+1 queries, or large object loading issues?
-- **Testing & Coverage:** Do tests cover both the feature and edge cases? Are test names clear and purposeful?
-- **Documentation:** Confirm docs reflect requirement changes.
-- **Naming & Readability:** Are names clear, consistent, and aligned with standards?
-- **Style Compliance:** Is the code consistent with project conventions?
+- **Security:** e.g. Any exposed credentials, input sanitization issues, debug logs, or OWASP Top 10 concerns?
+- **Performance:** e.g. Are there performance regressions, N+1 queries, or large object loading issues?
+- **Testing & Coverage:** e.g. Do tests cover both the feature and edge cases? Are test names clear and purposeful?
+- **Documentation:** e.g. Confirm docs reflect requirement changes.
+- **Naming & Readability:** e.g. Are names clear, consistent, and aligned with standards?
+- **Style Compliance:** e.g. Is the code consistent with project conventions?
 ---
 
 ### Suggested Next Steps
