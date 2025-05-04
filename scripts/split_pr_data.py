@@ -59,7 +59,7 @@ def split_pr_data(pr_data_file: str, output_dir: Optional[str] = None) -> str:
                 "additions": summary.get("additions", file_data.get("additions", 0)),
                 "deletions": summary.get("deletions", file_data.get("deletions", 0))
             })
-        pr_metadata["file_summaries"] = file_summaries
+        pr_metadata["changed_files"] = file_summaries
  
     metadata_file = os.path.join(output_dir, "pr_metadata.json")
     with open(metadata_file, 'w') as f:
