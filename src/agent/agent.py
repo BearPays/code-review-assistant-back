@@ -5,13 +5,15 @@ from dotenv import load_dotenv
 import uuid
 
 import chromadb
-from llama_index.core import Settings, StorageContext, load_index_from_storage, VectorStoreIndex
+from llama_index.core import Settings, StorageContext, load_index_from_storage, VectorStoreIndex, PromptTemplate
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.agent import ReActAgent
 from llama_index.core.tools import QueryEngineTool, ToolMetadata, FunctionTool
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.response_synthesizers import get_response_synthesizer
+from llama_index.core.callbacks import CallbackManager
+from llama_index.core.callbacks.simple_llm_handler import SimpleLLMHandler
 
 from .prompts import SYSTEM_PROMPT_CO_REVIEWER, SYSTEM_PROMPT_INTERACTIVE_ASSISTANT
 from .review_tool import create_review_tool
@@ -51,41 +53,34 @@ def load_query_engine_tools(pr_id: str) -> List[QueryEngineTool]:
             "storage_dir": "storage_pr_data",
             "name": "search_pr",
             "collection_name": f"{pr_id}_pr_data",
-            "description": (
-                "PRIMARY TOOL FOR CODE CHANGES: Use this tool for ANY questions about file diffs, changes, or modifications. "
-                "This is THE ONLY tool that can answer questions about what was changed in the PR. "
-                "The PR data is organized into multiple files: a main PR metadata file and individual files for each changed file in the PR. "
-                "The metadata file contains information like 'pr_number', 'title', 'description', 'author', 'state', etc., and a 'file_summaries' list showing files changed. so search for that file when you need to find the metadata. such as list of changed files. "
-                "Each modified file has its own JSON file in the 'modified_files' directory, preserving the original file path structure. "
-                "For example, if a file at 'internal/integration/security_reentrant/oas_schemas_gen.go' was modified, "
-                "its JSON file will be at 'modified_files/internal/integration/security_reentrant/oas_schemas_gen.go.json'. "
-                "Each file-level JSON contains fields like 'filename', 'status', 'additions', 'deletions', and importantly, two diff representations: "
-                "'diff_chunks' (a list of specific hunks of changes) and 'full_diff' (the complete unified diff as a string). "
-                "Use this tool for queries like 'Show changes to file X', 'Find diffs in the security module', or 'What logic was added in module Y?'. "
-            ),
+            "description": """PRIMARY TOOL FOR CODE CHANGES: Use this tool for ANY questions about file diffs, changes, or modifications.
+This is THE ONLY tool that can answer questions about what was changed in the PR.
+The PR data is organized into multiple files: a PR metadata file and individual files for each changed file in the PR.
+The metadata file contains information like 'pr_number', 'title', 'description', 'author', 'state', etc., and a 'file_summaries' list showing files changed. so search for that file when you need to find the metadata. such as list of changed files.
+Each modified file has its own JSON file in the 'modified_files' directory, preserving the original file path structure.
+For example, if a file at 'internal/integration/security_reentrant/oas_schemas_gen.go' was modified,
+its JSON file will be at 'modified_files/internal/integration/security_reentrant/oas_schemas_gen.go.json'.
+Each file-level JSON contains fields like 'filename', 'status', 'additions', 'deletions', and importantly, two diff representations:
+'diff_chunks' (a list of specific hunks of changes) and 'full_diff' (the complete unified diff as a string).
+Use this tool for queries like 'Show changes to file X', 'Find diffs in the security module', or 'What logic was added in module Y?'.""",
         },
         {
             "storage_dir": "storage_source_code", 
             "name": "search_code",
             "collection_name": f"{pr_id}_source_code",
-            "description": (
-                "INITIAL CODE STATE ONLY: This tool searches the initial state of the code before all changes. "
-                "DO NOT use this tool for questions about changes, diffs, or what was modified - unless you want to compare the original code with the changes made in the PR. "
-                "Use only for questions about implementation details, code structure, or how specific functionality works "
-                "Use this tool to gain more context about the code and the specific changes by looking upp the complete codefiles, but be aware that it does not reflect any changes made in the PR."
-            ),
+            "description": """INITIAL CODE STATE ONLY: This tool searches the initial state of the code before all changes. It contains the whole codebase, not just the changes made in the PR.
+Use this tool to compare the original code with the changes made in the PR.
+Use only for questions about implementation details, code structure, or how specific functionality works
+Use this tool to gain more context about the code and the specific changes by looking upp the complete codefiles, but be aware that it does not reflect any changes made in the PR.""",
         },
         {
             "storage_dir": "storage_pr_feature",
             "name": "search_requirements",
             "collection_name": f"{pr_id}_pr_feature", 
-            "description": (
-                "FEATURE REQUIREMENTS ONLY: Use this tool to search the feature requirements and specifications. "
-                "This includes acceptance criteria, user stories, and what the PR is supposed to accomplish. "
-                "Use this tool for example to compare the code changes with the feature requirements."
-                "This tool can also be used to identify which changes are relevant to the feature being implemented in the PR."
-                "Do not use this for code or PR change questions."
-            ),
+            "description": """FEATURE REQUIREMENT ONLY: Use this tool to understand the underlying feature linked to the PR.
+This includes an single file, containing a JIRA ticket with information about the feature being implemented in the PR.
+Use this tool for example to compare the code changes with the feature requirement.
+This tool can also be used with other tools to identify which changes are relevant to the feature being implemented in the PR.""",
         },
     ]
 
@@ -276,14 +271,29 @@ def create_agent(pr_id: str, mode: str) -> ReActAgent:
         print(f"Error: Invalid mode {mode}")
         return None
 
+    # Use a custom ReActChatFormatter with the full system prompt
+    from llama_index.core.agent.react.formatter import ReActChatFormatter
+    custom_formatter = ReActChatFormatter.from_defaults(system_header=system_prompt)
+
+    # Set up callback manager with SimpleLLMHandler to log full messages
+    #callback_manager = CallbackManager(handlers=[SimpleLLMHandler()])
+
     print(f"Creating ReActAgent with {len(query_engine_tools)} tools for {pr_id} in mode {mode}")
     agent = ReActAgent.from_tools(
         tools=query_engine_tools,
         llm=Settings.llm,
-        context=system_prompt,
+        react_chat_formatter=custom_formatter,
         max_iterations=10,
-        verbose=True # Set to False in production
+        verbose=True,  # Set to False in production
+    #    callback_manager=callback_manager,  # Attach the callback manager
     )
+    # Override system prompts using PromptTemplate.from_defaults to fill required placeholders
+    custom_prompt_template = PromptTemplate(system_prompt)
+    agent.update_prompts({
+        "react_header": custom_prompt_template,
+    })
+    prompts = agent.get_prompts()
+    print(prompts)
     return agent
 
 # --- Session Management ---
