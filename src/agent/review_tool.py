@@ -61,12 +61,17 @@ One-paragraph description of modifications.
 ---
 
 ### Cross-Cutting Concerns
-- **Security:** e.g. Any exposed credentials, input sanitization issues, debug logs, or OWASP Top 10 concerns?
-- **Performance:** e.g. Are there performance regressions, N+1 queries, or large object loading issues?
-- **Testing & Coverage:** e.g. Do tests cover both the feature and edge cases? Are test names clear and purposeful?
-- **Documentation:** e.g. Confirm docs reflect requirement changes.
-- **Naming & Readability:** e.g. Are names clear, consistent, and aligned with standards?
-- **Style Compliance:** e.g. Is the code consistent with project conventions?
+Assess the PR holistically across the categories below. **The bullet points under each category are examples** only—**do not treat them as exhaustive or limiting.** You may highlight *any* relevant issues, patterns, or concerns that affect maintainability, functionality, clarity, or system health.
+ 
+- **Security**: (e.g., exposed credentials, input sanitization, insecure config, OWASP Top 10)
+- **Performance**: (e.g., regressions, unoptimized loops, N+1 queries)
+- **Testing & Coverage**: (e.g., missing edge case tests, redundant tests, unclear test logic)
+- **Documentation**: (e.g., outdated README, missing method comments)
+- **Naming & Readability**: (e.g., ambiguous variable names, inconsistent terminology)
+- **Style Compliance**: (e.g., indentation, annotations, spacing violations, unchecked formatting)
+- **Complexity & Structure**: (e.g., overly long methods, deeply nested logic)
+- **Dependencies**: (e.g., unnecessary new libraries, missing version pinning)
+- **Debugging & Logging**: (e.g., leftover debug prints, sensitive logs)
 ---
 
 ### Suggested Next Steps
