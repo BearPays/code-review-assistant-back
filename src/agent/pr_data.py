@@ -17,8 +17,8 @@ def get_pr_data(project_name: str) -> str:
         FileNotFoundError: If the PR data file doesn't exist
     """
     # Construct the path to the pr.json file
-    data_dir = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data')))
-    pr_json_path = data_dir / project_name / 'pr_data' / 'pr.json'
+    pr_dir = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'pr_data')))
+    pr_json_path = pr_dir / project_name / 'pr.json'
     
     # Check if the file exists
     if not pr_json_path.exists():
