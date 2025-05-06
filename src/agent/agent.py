@@ -304,7 +304,7 @@ def create_agent(pr_id: str, mode: str) -> ReActAgent:
         tools=query_engine_tools,
         llm=Settings.llm,
         react_chat_formatter=custom_formatter,
-        max_iterations=10,
+        max_iterations=15,
         verbose=True,  # Set to False in production
     #    callback_manager=callback_manager,  # Attach the callback manager
     )
