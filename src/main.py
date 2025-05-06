@@ -135,6 +135,17 @@ async def chat_endpoint(request: ChatRequest):
         add_to_chat_history(session_id, {"role": "system", "content": f"Error processing request: {e}"})
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
+@app.get("/projects")
+async def get_projects():
+    """Returns a list of all project names in the indexes folder."""
+    indexes_path = os.path.join(os.path.dirname(__file__), "..", "indexes")
+    try:
+        project_names = [name for name in os.listdir(indexes_path) if os.path.isdir(os.path.join(indexes_path, name))]
+        return {"projects": project_names}
+    except Exception as e:
+        print(f"Error accessing indexes folder: {e}")
+        raise HTTPException(status_code=500, detail="Could not retrieve project names.")
+
 # --- Root Endpoint (Optional) ---
 @app.get("/")
 async def root():
