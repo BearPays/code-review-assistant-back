@@ -71,8 +71,8 @@ class PRDataFetcher:
         response.raise_for_status()
         return response.json()
     
-    def get_file_diff(self, pr_number: int) -> Dict[str, str]:
-        """Get all file diffs for a PR at once."""
+    def get_file_diff(self, pr_number: int, commit_hash: Optional[str] = None) -> Dict[str, str]:
+        """Get all file diffs for a PR up to a specific commit."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Clone the repository
             repo_url = f"{GITHUB_BASE_URL}:{self.repo_owner}/{self.repo_name}.git"
@@ -82,10 +82,13 @@ class PRDataFetcher:
             os.chdir(temp_dir)
             subprocess.run(["git", "fetch", "origin", f"pull/{pr_number}/head:pr-{pr_number}"], check=True)
             subprocess.run(["git", "checkout", f"pr-{pr_number}"], check=True)
-            
+
+            # Determine the diff endpoint
+            diff_endpoint = commit_hash if commit_hash else "origin/main"
+
             # Get all changed files
             result = subprocess.run(
-                ["git", "diff", "--name-only", "origin/main"],
+                ["git", "diff", "--name-only", diff_endpoint],
                 capture_output=True,
                 text=True
             )
@@ -96,7 +99,7 @@ class PRDataFetcher:
             for file_path in changed_files:
                 if file_path:  # Skip empty lines
                     result = subprocess.run(
-                        ["git", "diff", "origin/main", "--", file_path],
+                        ["git", "diff", diff_endpoint, "--", file_path],
                         capture_output=True,
                         text=True
                     )
